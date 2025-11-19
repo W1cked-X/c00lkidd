@@ -1,0 +1,173 @@
+-- c00lkidd RED ULTIMATE v2 • Mobile + PC • 2025
+-- Fully working • Red Theme • Big buttons • Touch friendly
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local Lighting = game:GetService("Lighting")
+local lp = Players.LocalPlayer
+local char = lp.Character or lp.CharacterAdded:Wait()
+local hum = char:WaitForChild("Humanoid")
+local root = char:WaitForChild("HumanoidRootPart")
+local camera = workspace.CurrentCamera
+
+-- GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "c00lkiddRED"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = game.CoreGui
+
+local Main = Instance.new("Frame")
+Main.Size = UDim2.new(0, 460, 0, 620)
+Main.Position = UDim2.new(0.5, -230, 0.5, -310)
+Main.BackgroundColor3 = Color3.fromRGB(18, 0, 0)
+Main.BorderSizePixel = 0
+Main.Active = true
+Main.Draggable = true
+Main.Parent = ScreenGui
+
+local Corner = Instance.new("UICorner", Main); Corner.CornerRadius = UDim.new(0, 16)
+local Stroke = Instance.new("UIStroke", Main); Stroke.Color = Color3.fromRGB(255, 30, 30); Stroke.Thickness = 4
+
+-- Title
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1,0,0,60)
+Title.BackgroundTransparency = 1
+Title.Text = "c00lkidd RED ULTIMATE"
+Title.TextColor3 = Color3.fromRGB(255, 80, 80)
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 32
+Title.Parent = Main
+
+-- Scrolling Frame
+local Scroll = Instance.new("ScrollingFrame")
+Scroll.Size = UDim2.new(1, -20, 1, -80)
+Scroll.Position = UDim2.new(0, 10, 0, 70)
+Scroll.BackgroundTransparency = 1
+Scroll.ScrollBarThickness = 8
+Scroll.ScrollBarImageColor3 = Color3.fromRGB(255, 0, 0)
+Scroll.CanvasSize = UDim2.new(0,0,0,900)
+Scroll.Parent = Main
+
+local Layout = Instance.new("UIGridLayout", Scroll)
+Layout.CellSize = UDim2.new(0.48, 0, 0, 70)
+Layout.CellPadding = UDim2.new(0, 10, 0, 12)
+Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+-- Toggle States
+local Toggles = {
+    Fly = false, Invis = false, Noclip = false, ESP = false,
+    Fullbright = false, Speed = false, InfiniteJump = false
+}
+
+-- Create Button Function
+local function CreateBtn(name, callback)
+    local btn = Instance.new("TextButton")
+    btn.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+    btn.TextColor3 = Color3.new(1,1,1)
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 24
+    btn.Text = name .. " [OFF]"
+    btn.Parent = Scroll
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 12)
+    
+    btn.MouseButton1Click:Connect(function()
+        Toggles[name] = not Toggles[name]
+        btn.Text = name .. (Toggles[name] and " [ON]" or " [OFF]")
+        btn.BackgroundColor3 = Toggles[name] and Color3.fromRGB(0, 200, 0) or Color3.fromRGB(150, 0, 0)
+        callback(Toggles[name])
+    end)
+    return btn
+end
+
+-- FLY
+CreateBtn("FLY", function(on)
+    if on then
+        local bv = Instance.new("BodyVelocity", root)
+        bv.MaxForce = Vector3.new(1e5,1e5,1e5)
+        bv.Velocity = Vector3.new(0,0,0)
+        spawn(function()
+            while Toggles.FLY and root.Parent do
+                local cam = camera.CFrame
+                local move = Vector3.new()
+                if UserInputService:IsKeyDown(Enum.KeyCode.W) then move += cam.LookVector end
+                if UserInputService:IsKeyDown(Enum.KeyCode.S) then move -= cam.LookVector end
+                if UserInputService:IsKeyDown(Enum.KeyCode.A) then move -= cam.RightVector end
+                if UserInputService:IsKeyDown(Enum.KeyCode.D) then move += cam.RightVector end
+                if UserInputService:IsKeyDown(Enum.KeyCode.Space) then move += Vector3.new(0,1,0) end
+                if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then move -= Vector3.new(0,1,0) end
+                bv.Velocity = move.Unit * 120
+                task.wait()
+            end
+            bv:Destroy()
+        end)
+    end
+end)
+
+-- INVISIBILITY
+CreateBtn("INVIS", function(on)
+    for _, part in pairs(char:GetChildren()) do
+        if part:IsA("BasePart") or part:IsA("MeshPart") then
+            part.Transparency = on and 1 or 0
+        end
+    end
+    char.Head.face.Transparency = on and 1 or 0
+end)
+
+-- NOCLIP
+CreateBtn("NOCLIP", function(on)
+    if on then
+        RunService.Stepped:Connect(function()
+            if not Toggles.NOCLIP then return end
+            for _, part in pairs(char:GetDescendants()) do
+                if part:IsA("BasePart") then part.CanCollide = false end
+            end
+        end)
+    end
+end)
+
+-- ESP
+CreateBtn("ESP", function(on)
+    if on then
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= lp and player.Character then
+                local hl = Instance.new("Highlight", player.Character)
+                hl.FillColor = Color3.fromRGB(255, 0, 0)
+                hl.OutlineColor = Color3.fromRGB(255, 100, 100)
+                hl.FillTransparency = 0.5
+            end
+        end
+    else
+        for _, player in pairs(Players:GetPlayers()) do
+            if player.Character then
+                local hl = player.Character:FindFirstChild("Highlight")
+                if hl then hl:Destroy() end
+            end
+        end
+    end
+end)
+
+-- FULLBRIGHT
+CreateBtn("FULLBRIGHT", function(on)
+    Lighting.Brightness = on and 5 or 1
+    Lighting.FogEnd = on and 100000 or 100000
+    Lighting.GlobalShadows = not on
+end)
+
+-- SPEED
+CreateBtn("SPEED 100", function(on)
+    hum.WalkSpeed = on and 100 or 16
+end)
+
+-- INFINITE JUMP
+CreateBtn("INF JUMP", function(on)
+    UserInputService.JumpRequest:Connect(function()
+        if Toggles["INF JUMP"] then
+            hum:ChangeState(Enum.HumanoidStateType.Jumping)
+        end
+    end)
+end)
+
+-- Final Touch
+print("c00lkidd RED ULTIMATE v2 LOADED • Mobile + PC • You're a God Now")
